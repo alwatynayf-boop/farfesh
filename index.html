@@ -5,233 +5,211 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>فرفش مع الأسطورة</title>
     <style>
-        body { margin: 0; background: #000; color: #00ff00; font-family: 'Courier New', Tahoma, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
-        .header-area { text-align: center; padding: 10px; border-bottom: 2px solid #00ff00; }
-        .main-title { font-size: 22px; font-weight: bold; color: #ff0000; text-shadow: 1px 1px #fff; }
-        .container { display: flex; flex-grow: 1; height: calc(100vh - 100px); }
-        .sidebar { width: 90px; background: #000; border-left: 2px solid #00ff00; display: flex; flex-direction: column; padding: 5px; gap: 5px; }
-        .sidebar button { background: #000; border: 2px outset #00ff00; color: #00ff00; padding: 8px 2px; font-size: 11px; cursor: pointer; font-weight: bold; }
-        .content-area { flex-grow: 1; position: relative; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
-        .section { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
+        body { margin: 0; background: #02050f; color: #00ff00; font-family: 'Courier New', Tahoma, sans-serif; overflow: hidden; height: 100vh; display: flex; flex-direction: column; position: relative; }
+        .stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background-image: radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)), radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)); background-size: 300px 300px; animation: move-it 100s linear infinite; }
+        @keyframes move-it { from { background-position: 0 0; } to { background-position: 1000px 1000px; } }
+        
+        .header-area { text-align: center; padding: 5px; border-bottom: 2px solid #00ff00; background: rgba(0,0,0,0.8); min-height: 5px; }
+        
+        /* العنوان الملون المتحرك */
+        .main-title { 
+            font-size: 16px; 
+            font-weight: bold; 
+            text-shadow: 2px 2px #000;
+            display: block;
+            margin-top: 15px;
+            animation: rainbow-text 3s linear infinite, shake 0.5s ease-in-out infinite;
+        }
+
+        @keyframes rainbow-text {
+            0% { color: #ff0000; } 20% { color: #ffff00; } 40% { color: #00ff00; }
+            60% { color: #00ffff; } 80% { color: #0000ff; } 100% { color: #ff00ff; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(0,0); }
+            25% { transform: translate(1px, 1px); }
+            50% { transform: translate(-1px, -1px); }
+            75% { transform: translate(1px, -1px); }
+        }
+
+        .container { display: flex; flex-grow: 1; height: calc(100vh - 80px); }
+        
+        .sidebar { width: 115px; background: rgba(0,0,0,0.8); border-left: 2px solid #00ff00; display: flex; flex-direction: column; padding: 5px; gap: 5px; text-align: center; z-index: 10; }
+        .sidebar-title { font-size: 12px; font-weight: bold; color: #fff; margin-bottom: 10px; border-bottom: 1px solid #00ff00; padding-bottom: 5px; }
+        
+        .sidebar button { background: #000; border: 2px outset #00ff00; color: #00ff00; padding: 8px 2px; font-size: 11px; cursor: pointer; font-weight: bold; width: 100%; }
+        .content-area { flex-grow: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; overflow: hidden; padding-top: 10px; }
+        .section { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: flex-start; }
         .active-section { display: flex; }
+
+        /* شريط الأخبار اللانهائي السلس */
+        .marquee-container {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #000080;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            padding: 6px 0;
+            border-top: 2px solid #00ff00;
+        }
+        .marquee-text {
+            display: inline-block;
+            padding-right: 100%;
+            animation: marquee-anim 25s linear infinite;
+        }
+        @keyframes marquee-anim {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* تنسيقات الألعاب */
         .choice-box { width: 85%; padding: 15px; margin: 5px; text-align: center; font-size: 16px; font-weight: bold; border: 3px double; cursor: pointer; }
         .blue-choice { background: #000080; border-color: #00f; color: #fff; }
         .red-choice { background: #800000; border-color: #f00; color: #fff; }
-        .joke-display { width: 85%; padding: 15px; border: 2px dashed #ffff00; color: #ffff00; font-size: 17px; text-align: center; min-height: 80px; display: flex; align-items: center; }
-        
-        /* الرسام */
-        #paint-wrap { width: 95%; height: 70%; display: flex; flex-direction: column; background: #fff; border: 2px solid #00ff00; margin-bottom: 5px; position: relative; }
-        canvas { width: 100%; height: 100%; touch-action: none; background: #fff; display: block; }
+        .joke-display { width: 85%; padding: 15px; border: 2px dashed #ffff00; color: #ffff00; font-size: 17px; text-align: center; min-height: 80px; display: flex; align-items: center; background: rgba(0,0,0,0.7); margin-top: 20px; }
+        #paint-wrap { width: 95%; height: 50%; background: #fff; border: 2px solid #00ff00; margin-bottom: 5px; cursor: crosshair; position: relative; }
+        canvas#canv { width: 100%; height: 100%; touch-action: none; background: #fff; }
+        #pacman-canvas { background: #000; border: 2px solid #00f; image-rendering: pixelated; }
         .paint-tools { background: #c0c0c0; display: flex; flex-wrap: wrap; gap: 3px; padding: 5px; border-top: 1px solid #000; justify-content: center; width: 95%; }
-        .paint-tools button { color: #000; font-size: 9px; padding: 3px; background: #ddd; border: 1px outset #fff; }
-        .color-dot { width: 18px; height: 18px; border: 1px solid #000; cursor: pointer; }
-        
-        #forum-box { width: 90%; height: 55%; background: #000; border: 2px inset #00ff00; overflow-y: auto; padding: 5px; color: #00ff00; font-size: 11px; }
-        #name-setup { border: 2px solid #00ff00; padding: 15px; text-align: center; }
-        input { background: #000; color: #00ff00; border: 1px solid #00ff00; padding: 4px; }
-        marquee { background: #000080; color: #fff; padding: 2px; font-size: 10px; }
+        .paint-tools button { color: #000; font-size: 9px; padding: 3px; background: #ddd; border: 1px outset #fff; cursor: pointer; }
+        .color-dot { width: 22px; height: 22px; border: 1px solid #000; cursor: pointer; }
+        #forum-box { width: 90%; height: 50%; background: rgba(0,0,0,0.9); border: 2px inset #00ff00; overflow-y: auto; padding: 10px; color: #00ff00; font-size: 13px; text-align: right; }
+        #name-setup { border: 2px solid #00ff00; padding: 15px; text-align: center; background: #000; margin-top: 20px; }
+        input { background: #000; color: #00ff00; border: 1px solid #00ff00; padding: 8px; }
+        .pac-controls { display: grid; grid-template-columns: repeat(3, 50px); gap: 10px; margin-top: 15px; }
+        .pac-btn { width: 50px; height: 50px; background: #333; color: #fff; border: 2px solid #00ff00; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; user-select: none; }
+        .reset-btn { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: #ff0000; color: #fff; border: 2px solid #fff; padding: 15px 10px; font-weight: bold; cursor: pointer; border-radius: 5px; z-index: 20; }
+        #go-screen { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:100; }
     </style>
 </head>
 <body>
-    <div class="header-area"><div class="main-title">فرفش مع الأسطورة</div></div>
+    <div class="stars"></div>
+    <div class="header-area"></div>
     <div class="container">
         <div class="sidebar">
+            <div class="sidebar-title">قائمة الأسطورة</div>
             <button onclick="show('home')">الرئيسية</button>
             <button onclick="show('q-sec')">لو خيروك</button>
             <button onclick="show('joke-sec')">النكت</button>
+            <button onclick="show('pac-sec')">باك مان</button>
             <button onclick="show('paint-sec')">الرسام</button>
             <button onclick="show('forum-sec')">المنتدى</button>
+            
+            <div class="main-title">فرفش مع الأسطورة</div>
         </div>
+
         <div class="content-area">
-            <div id="home" class="section active-section"><h2>استمتع و فرفش</h2><p>تم انشاء الموقع في 2004</p></div>
-            <div id="q-sec" class="section"><!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <title>Page title</title>
-            </head>
-            <body>
-                
-            </body>
-            </html>
+            <div id="home" class="section active-section"><h2>فرفش</h2><p>تم انشاء الموقع في 2004</p></div>
+            <div id="q-sec" class="section">
                 <div id="q-blue" class="choice-box blue-choice" onclick="nextQ()"></div>
                 <div style="color:#fff">أو</div>
                 <div id="q-red" class="choice-box red-choice" onclick="nextQ()"></div>
             </div>
             <div id="joke-sec" class="section">
-                <div id="joke-box" class="joke-display"></div>
+                <div id="joke-box" class="joke-display">اضغط التالي لتضحك</div>
                 <button onclick="nextJ()" style="background:#0f0; padding:8px 25px; margin-top:10px; font-weight:bold;">التالي</button>
+            </div>
+            <div id="pac-sec" class="section">
+                <div style="color:yellow; font-weight:bold; font-size:14px; margin-bottom:5px; background:rgba(0,0,0,0.6); padding:4px 10px;">
+                    النقاط: <span id="pac-score">0</span>
+                </div>
+                <div style="position:relative;">
+                    <canvas id="pacman-canvas" width="280" height="280"></canvas>
+                    <div id="go-screen"><h2 style="color:red;">GAME OVER</h2><button onclick="initPacman()" style="background:#0f0; padding:10px 20px; font-weight:bold;">إعادة</button></div>
+                </div>
+                <div class="pac-controls">
+                    <div></div><div class="pac-btn" onclick="setPacDir('up')">↑</div><div></div>
+                    <div class="pac-btn" onclick="setPacDir('left')">←</div><div></div><div class="pac-btn" onclick="setPacDir('right')">→</div>
+                    <div></div><div class="pac-btn" onclick="setPacDir('down')">↓</div><div></div>
+                </div>
+                <button class="reset-btn" onclick="initPacman()">R</button>
             </div>
             <div id="paint-sec" class="section">
                 <div id="paint-wrap"><canvas id="canv"></canvas></div>
                 <div class="paint-tools">
                     <button onclick="setTool('pen')">قلم</button>
                     <button onclick="setTool('eraser')">محاية</button>
-                    <button onclick="fillC()">سطل</button>
+                    <button onclick="fillCanvas()">سطل</button>
+                    <button onclick="undo()">تراجع</button>
                     <button onclick="clearC()">مسح</button>
-                    <button onclick="saveD()" style="background:#0f0">حفظ</button>
-                    <input type="range" id="pw" min="1" max="20" value="3" style="width:50px">
+                    <input type="range" id="pw" min="1" max="20" value="3" style="width:40px">
                     <div class="color-dot" style="background:#000" onclick="setCol('#000')"></div>
                     <div class="color-dot" style="background:#f00" onclick="setCol('#f00')"></div>
                     <div class="color-dot" style="background:#00f" onclick="setCol('#00f')"></div>
-                    <div class="color-dot" style="background:#0f0" onclick="setCol('#0f0')"></div>
+                    <div class="color-dot" style="background:#fff" onclick="setCol('#fff')"></div>
                 </div>
             </div>
             <div id="forum-sec" class="section">
-                <div id="name-setup">
-                    <div>أدخل اسمك يا بطل:</div>
-                    <input id="u-name" type="text" maxlength="15">
-                    <button onclick="setName()" style="background:#0f0; margin-top:5px;">دخول</button>
-                </div>
-                <div id="chat-ui" style="display:none; width:100%; height:100%; flex-direction:column; align-items:center;">
-                    <div id="forum-box"></div>
-                    <div style="display:flex; width:90%; margin-top:5px;"><input id="f-msg" style="flex-grow:1;"><button onclick="postM()" style="background:#0f0">أرسل</button></div>
+                <div id="name-setup"><div>أدخل اسمك المستعار:</div><input id="u-name" type="text" maxlength="15"><button onclick="setName()" style="background:#0f0; margin-top:5px;">دخول</button></div>
+                <div id="chat-ui" style="display:none; width:100%; height:100%; flex-direction:column; align-items:center; padding-top:10px;">
+                    <div id="forum-box"></div><div style="display:flex; width:90%; margin-top:5px;"><input id="f-msg" style="flex-grow:1;"><button onclick="postM()" style="background:#0f0; padding: 0 10px;">أرسل</button></div>
                 </div>
             </div>
         </div>
     </div>
-    <marquee direction="right">*** موقع الأسطورة - الرسام شغال الآن - نكت كاملة - لو خيروك 30 - المنتدى فعال ***</marquee>
+
+    <div class="marquee-container">
+        <div class="marquee-text">
+            ** موقع فرفش الأسطورة - فرفش يا بعد حيي - مترشح ضمن افضل ١٠٠ موقع عربي - مترشح ضمن افضل ١٠٠٠ موقع خليجي *** &nbsp;&nbsp;&nbsp;&nbsp; 
+            ** موقع فرفش الأسطورة - فرفش يا بعد حيي - مترشح ضمن افضل ١٠٠ موقع عربي - مترشح ضمن افضل ١٠٠٠ موقع خليجي ***
+        </div>
+    </div>
 
     <script>
-        let myN = "";
+        // دالة التبديل (موضوعة في الأعلى لضمان عمل الأزرار)
         function show(id) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active-section'));
-            document.getElementById(id).classList.add('active-section');
-            if(id === 'paint-sec') {
-                setTimeout(initCanv, 50);
+            var sections = document.getElementsByClassName('section');
+            for (var i = 0; i < sections.length; i++) {
+                sections[i].classList.remove('active-section');
             }
+            document.getElementById(id).classList.add('active-section');
+            
+            if (id === 'paint-sec') setTimeout(initCanv, 100);
+            if (id === 'pac-sec') initPacman(); else { if(typeof pacInt !== 'undefined') clearInterval(pacInt); pOn = false; }
         }
 
-        // لو خيروك (30)
-        let qI = 0;
-        const qs = [
-            {a:"تطير بس تمشي بطيء جداً", b:"تختفي بس صوتك عالي وفاضحك"}, {a:"تاكل صرصور مقلي ومقرمش", b:"تشرب بنزين بارد مع ثلج"},
-            {a:"تكون عبقري بس فقير وشحات", b:"تكون غبي جداً بس عندك مليارات"}, {a:"ترجع للماضي وتغير كل أغلاطك", b:"تروح للمستقبل وتشوف وش بيصير لك"},
-            {a:"تكلم الحيوانات وتفهم عليهم", b:"تتحدث كل لغات البشر بطلاقة"}, {a:"تمشي حافي على رمل حارق", b:"تلبس جزمة ضيقة تعورك طول اليوم"},
-            {a:"تعيش في القطب المتجمد لحالك", b:"تعيش في وسط الصحراء بعز الصيف"}, {a:"تنام 20 ساعة وتصحى تعبان", b:"تنام ساعتين بس وتكون نشيط"},
-            {a:"تسمع أفكار الناس اللي حولك", b:"تتحكم في الوقت وتوقفه متى ما تبي"}, {a:"تعيش بدون إنترنت للأبد", b:"تعيش بدون مكيف في الظهرية"},
-            {a:"تاكل بس رز طول حياتك", b:"تاكل بس مكرونة طول حياتك"}, {a:"تصير شجرة صبار في خلا", b:"تصير صخرة في قمة جبل"},
-            {a:"تنسى اسمك تماماً وما تعرفه", b:"تنسى وجوه كل اللي تحبهم"}, {a:"تكون دائماً حران وعرقان", b:"تكون دائماً بردان وترجف"},
-            {a:"تكون مشهور والناس تكرهك", b:"تكون مجهول والكل يحبك"}, {a:"تطير لمسافة متر واحد بس", b:"تقفز لمسافة 10 أمتار فوق"},
-            {a:"تعيش في الفضاء بمركبة لحالك", b:"تعيش تحت البحر مع القروش"}, {a:"تاكل بصل ني مع كل وجبة", b:"تشرب ليمون حامض بدون سكر"},
-            {a:"تتغير ملامح وجهك كل يوم", b:"يتغير صوتك كل ما تكلمت"}, {a:"تكون أسرع إنسان في العالم", b:"تكون أقوى إنسان في العالم"},
-            {a:"تصحى الساعة 4 الفجر كل يوم", b:"ما تنام إلا الساعة 4 الفجر كل يوم"}, {a:"تشرب قهوة محطوط فيها ملح", b:"تاكل كيكة محطوط فيها شطة"},
-            {a:"تصير نملة ذكية وليها جيش", b:"تصير فيل غبي ويضحكون عليك"}, {a:"تنام في الشارع ليلة كاملة", b:"تنام في غابة مسكونة ليلة كاملة"},
-            {a:"تحب شخص وهو يكرهك ويذلك", b:"يكرهك شخص وأنت تموت فيه"}, {a:"تكون الأول دايماً بضغط نفسي", b:"تكون الأخير ومرتاح ومروق"},
-            {a:"تخسر جوالك وما عاد تشوفه", b:"تخسر بلايستيشن حقك للأبد"}, {a:"تعرف موعد موتك باليوم", b:"تعرف كيف بتموت وبأي طريقة"},
-            {a:"تاكل بيتزا بالأناناس والسمك", b:"تاكل برجر بلحم ني ومو مستوي"}, {a:"تصير بطل خارق بس سري", b:"تصير مشهور بس فاشل وما عندك سالفة"}
-        ];
-
-        // النكت الكاملة (30)
-        let jI = 0;
-        const js = [
-            "محشش سألوه ايش اصعب شي بالحياة؟ قال انك تحدد السكسوكة وانت تاكل علك!",
-            "غبي رمى جواله من البلكونة ولقاه مكسور.. قال غريبة مع اني حاطه وضع طيران!",
-            "مدرس سأل طالب: الثعلب يولد ولا يبيض؟ قال: الثعلب مكار توقع منه أي شي!",
-            "واحد سأل محشش: شو اسماء اخوانك؟ قال: كلهم محمد إلا خالد اسمه فيصل!",
-            "محشش شاف إشارة ممنوع الوقوف.. قام انبطح بالشارع!",
-            "بخيل احترق بيته، اتصل بالمطافي رنة وحدة وقفل عشان ما يصرف!",
-            "نملة تزوجت فيل، مات وقعدت طول عمرها تدفنه وتصيح!",
-            "محشش يبي يقتل سمكة.. قام غرقها بالموية وخنقها!",
-            "واحد نام متأخر.. فاته الحلم اللي كان بيشوفه!",
-            "مدرس لغة عربية طاح.. رفعوه زملائه بالضمة!",
-            "غبي اشترى تاكسي.. كل ما حد يأشر له يقول: أدري والله إني تاكسي وجالس اتمشى!",
-            "محشش حط فلوسه بالبنك.. وكل يوم يمر يطق الباب يقول: والله كبرتي يا فلوسي!",
-            "واحد شاف صرصور ميت قال: مسكين أكيد مات من كثر الضحك!",
-            "محشش جاله ولد سماه بدري عشان يطلع الأول بالمدرسة!",
-            "نملة ناشبة في مغناطيس ليه؟ عشان مركبة تقويم أسنان حديد!",
-            "محشش شاف قمر قال هذا شمس؟ قالوا لا قمر، قال والله ماني من الديرة هذي!",
-            "واحد سأل أبوه: كيف عرفت ماما؟ قال: شفت يا ولدي حتى أنت مستغرب من السالفة!",
-            "محشش يغسل سيارته ببيبسي ليه؟ عشان تلمع وتصير سريعة مثل البرق!",
-            "واحد بخيل أكل تفاحة بالظلام عشان ما يشوف الدود اللي فيها!",
-            "غبي اشترى ساعة.. كل ما سألوه كم الساعة؟ يقول ما أدري بس هي تدق الحين!",
-            "واحد عصبي وجعه ضرسه قال للطبيب اقلعهم كلهم وخله هو لحاله مثل الكلب!",
-            "غبي يبي يشحن جواله بسرعة قام حطه بالميكروويف خمس دقايق!",
-            "نملة دخلت البحر وطلعت بسرعة ليه؟ عشان نست الفوطة والماي بارد!",
-            "غبي ضيع حماره وشاف حمار وحشي قال المتزين يحسبني ما اعرفه وهو حمار!",
-            "محشش سألوه لو انفجرت المدرسة وش بتسوي؟ قال أغطي عيوني عشان الغبار!",
-            "محشش بالجامعة سألوه أي تخصص؟ قال تخصص استراحة وفلة حجاج!",
-            "واحد سأل غبي: ليش في شوارع بباريس؟ قال عشان الناس ما تمشي على الطين وتتوسخ!",
-            "محشش شاف وحدة حلوة قال لها: يا بخت اللي بياخذك، قالت: انت؟ قال: لا اللي بياخذك ويفتك!",
-            "بخيل دخل الحمام وما طلع ليه؟ شاف مكتوب على الباب من داخل (ادفع)!",
-            "محشش ضيع مفتاح البيت، قعد يفتح الباب بملعقة ليه؟ عشان يذوق القفل ويفتحه!"
-        ];
-
-        function nextQ(){ document.getElementById('q-blue').innerText=qs[qI].a; document.getElementById('q-red').innerText=qs[qI].b; qI=(qI+1)%30; }
-        function nextJ(){ document.getElementById('joke-box').innerText=js[jI]; jI=(jI+1)%30; }
+        // باقي الأكواد البرمجية (لو خيروك والنكت)
+        const qs = [{a:"تطير بس تمشي بطيء جداً", b:"تختفي بس صوتك عالي وفاضحك"}, {a:"تاكل صرصور مقلي ومقرمش", b:"تشرب بنزين بارد مع ثلج"}, {a:"تكون عبقري بس فقير وشحات", b:"تكون غبي جداً بس عندك مليارات"}, {a:"ترجع للماضي وتغير كل أغلاطك", b:"تروح للمستقبل وتشوف وش بيصير لك"}, {a:"تكلم الحيوانات وتفهم عليهم", b:"تتحدث كل لغات البشر بطلاقة"}, {a:"تمشي حافي على رمل حارق", b:"تلبس جزمة ضيقة تعورك طول اليوم"}, {a:"تعيش في القطب المتجمد لحالك", b:"تعيش في وسط الصحراء بعز الصيف"}, {a:"تنام 20 ساعة وتصحى تعبان", b:"تنام ساعتين بس وتكون نشيط"}, {a:"تسمع أفكار الناس اللي حولك", b:"تتحكم في الوقت وتوقفه متى ما تبي"}, {a:"تعيش بدون إنترنت للأبد", b:"تعيش بدون مكيف في الظهرية"}];
+        const js = ["محشش سألوه ايش اصعب شي بالحياة؟ قال انك تحدد السكسوكة وانت تاكل علك!", "غبي رمى جواله من البلكونة ولقاه مكسور.. قال غريبة مع اني حاطه وضع طيران!", "مدرس سأل طالب: الثعلب يولد ولا يبيض؟ قال: الثعلب مكار توقع منه أي شي!", "واحد سأل محشش: شو اسماء اخوانك؟ قال: كلهم محمد إلا خالد اسمه فيصل!", "محشش شاف إشارة ممنوع الوقوف.. قام انبطح بالشارع!", "بخيل احترق بيته، اتصل بالمطافي رنة وحدة وقفل عشان ما يصرف!"];
+        let qI=0, jI=0;
+        function nextQ(){ document.getElementById('q-blue').innerText=qs[qI].a; document.getElementById('q-red').innerText=qs[qI].b; qI=(qI+1)%qs.length; }
+        function nextJ(){ document.getElementById('joke-box').innerText=js[jI]; jI=(jI+1)%js.length; }
         nextQ(); nextJ();
 
-        // الرسام - الإصلاح النهائي
-        const canv = document.getElementById('canv'); const ctx = canv.getContext('2d');
-        let isDrawing = false; let tool = 'pen'; let col = '#000';
-
-        function initCanv() {
-            canv.width = canv.parentElement.clientWidth;
-            canv.height = canv.parentElement.clientHeight;
-            ctx.fillStyle = "#fff";
-            ctx.fillRect(0, 0, canv.width, canv.height);
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-        }
-
-        function setTool(t){ tool = t; }
-        function setCol(c){ col = c; if(tool == 'eraser') tool = 'pen'; }
-        function clearC(){ ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canv.width, canv.height); }
-        function fillC(){ ctx.fillStyle = col; ctx.fillRect(0, 0, canv.width, canv.height); }
-        function saveD(){ const l = document.createElement('a'); l.download = 'art.png'; l.href = canv.toDataURL(); l.click(); }
-
-        function getPos(e) {
-            const rect = canv.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return { x: clientX - rect.left, y: clientY - rect.top };
-        }
-
-        function start(e) {
-            e.preventDefault();
-            isDrawing = true;
-            const p = getPos(e);
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-        }
-
-        function move(e) {
-            if (!isDrawing) return;
-            e.preventDefault();
-            const p = getPos(e);
-            ctx.lineWidth = document.getElementById('pw').value;
-            ctx.strokeStyle = tool === 'eraser' ? '#fff' : col;
-            ctx.lineTo(p.x, p.y);
-            ctx.stroke();
-        }
-
-        function end() { isDrawing = false; }
-
-        canv.addEventListener('mousedown', start);
-        canv.addEventListener('mousemove', move);
-        window.addEventListener('mouseup', end);
-
-        canv.addEventListener('touchstart', start, {passive: false});
-        canv.addEventListener('touchmove', move, {passive: false});
-        window.addEventListener('touchend', end);
+        // الرسام
+        let canv=document.getElementById('canv'), ctx=canv.getContext('2d'), drawing=false, tool='pen', color='#000', history=[];
+        function saveStep(){ if(history.length > 20) history.shift(); history.push(canv.toDataURL()); }
+        function undo(){ if(history.length > 0){ let img = new Image(); img.src = history.pop(); img.onload = () => { ctx.clearRect(0,0,canv.width,canv.height); ctx.drawImage(img, 0, 0); } } }
+        function initCanv(){ let box = canv.parentElement; canv.width=box.clientWidth; canv.height=box.clientHeight; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.fillStyle="#fff"; ctx.fillRect(0,0,canv.width,canv.height); }
+        function getPos(e){ let rect = canv.getBoundingClientRect(); let clientX = e.touches ? e.touches[0].clientX : e.clientX; let clientY = e.touches ? e.touches[0].clientY : e.clientY; return { x: clientX - rect.left, y: clientY - rect.top }; }
+        function start(e){ drawing=true; saveStep(); let p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+        function draw(e){ if(!drawing) return; let p = getPos(e); ctx.strokeStyle = (tool=='eraser'?'#fff':color); ctx.lineWidth = document.getElementById('pw').value; ctx.lineTo(p.x, p.y); ctx.stroke(); }
+        function stop(){ drawing=false; }
+        canv.addEventListener('mousedown', start); canv.addEventListener('mousemove', draw); window.addEventListener('mouseup', stop);
+        canv.addEventListener('touchstart', (e)=>{ e.preventDefault(); start(e); }); canv.addEventListener('touchmove', (e)=>{ e.preventDefault(); draw(e); }); canv.addEventListener('touchend', stop);
+        function setTool(t){ tool=t; } function setCol(c){ color=c; tool='pen'; } 
+        function fillCanvas(){ saveStep(); ctx.fillStyle = color; ctx.fillRect(0,0,canv.width,canv.height); }
+        function clearC(){ saveStep(); ctx.fillStyle="#fff"; ctx.fillRect(0,0,canv.width,canv.height); }
 
         // المنتدى
-        function setName() {
-            let n = document.getElementById('u-name').value;
-            if(!n) n = "عضو_الأسطورة"; myN = n;
-            document.getElementById('name-setup').style.display = 'none';
-            document.getElementById('chat-ui').style.display = 'flex'; loadF();
-        }
-        function postM() {
-            let i=document.getElementById('f-msg'); if(!i.value)return;
-            let m=JSON.parse(localStorage.getItem('f_d')||'[]'); m.push(myN+": "+i.value);
-            localStorage.setItem('f_d',JSON.stringify(m)); i.value=""; loadF();
-        }
-        function loadF() {
-            let m=JSON.parse(localStorage.getItem('f_d')||'[]');
-            document.getElementById('forum-box').innerHTML=m.map(x=>`<div>> ${x}</div>`).join('');
-            document.getElementById('forum-box').scrollTop=9999;
-        }
+        let userN = ""; const bots = ["قناص_الرياض", "شوكولاتة", "الأسطورة_99"]; const msgs = ["ههههههههه نكتة حلوة", "أحد يلعب باك مان؟", "موقع فله"];
+        function setName(){ let n=document.getElementById('u-name').value; if(n){ userN=n; document.getElementById('name-setup').style.display='none'; document.getElementById('chat-ui').style.display='flex'; startOnline(); } }
+        function postM(){ let m=document.getElementById('f-msg').value; if(m){ addMsg(userN, m); document.getElementById('f-msg').value=""; } }
+        function addMsg(u, m){ let b=document.getElementById('forum-box'); b.innerHTML+=`<div><b>${u}:</b> ${m}</div>`; b.scrollTop=b.scrollHeight; }
+        function startOnline(){ setInterval(()=>{ if(Math.random()>0.7) addMsg(bots[Math.floor(Math.random()*bots.length)], msgs[Math.floor(Math.random()*msgs.length)]); }, 5000); }
+
+        // باك مان
+        let pc=document.getElementById('pacman-canvas'), pctx=pc.getContext('2d'), pacInt;
+        let px, py, pdir, score, pDots, pGhosts, pOn, pStep=35;
+        function initPacman(){ document.getElementById('go-screen').style.display='none'; px=140; py=140; pdir='stop'; score=0; pOn=true; createDots(); pGhosts=[{x:20, y:20, c:'#f00', s:2.5}, {x:250, y:20, c:'#0ff', s:2.5}]; if(pacInt) clearInterval(pacInt); pacInt=setInterval(upPac, 40); }
+        function setPacDir(d){ pdir=d; if(d=='up'||d=='down') px = Math.round((px-17)/pStep)*pStep+17; if(d=='left'||d=='right') py = Math.round((py-17)/pStep)*pStep+17; }
+        function createDots(){ pDots=[]; for(let i=0; i<8; i++) for(let j=0; j<8; j++) pDots.push({x:i*pStep+17, y:j*pStep+17, a:true}); }
+        function drawPixelPac(x,y){ pctx.fillStyle="yellow"; pctx.fillRect(x-8, y-8, 16, 16); pctx.fillStyle="black"; pctx.fillRect(x+2, y-4, 4, 4); pctx.clearRect(x, y-2, 8, 4); }
+        function drawPixelGhost(x,y,c){ pctx.fillStyle=c; pctx.fillRect(x-8, y-6, 16, 12); pctx.fillRect(x-8, y+6, 4, 4); pctx.fillRect(x, y+6, 4, 4); pctx.fillRect(x+4, y+6, 4, 4); pctx.fillStyle="white"; pctx.fillRect(x-5, y-3, 4, 4); pctx.fillRect(x+2, y-3, 4, 4); }
+        function upPac(){ if(!pOn) return; pctx.fillStyle="#000"; pctx.fillRect(0,0,280,280); if(pdir=='right') px+=4; if(pdir=='left') px-=4; if(pdir=='up') py-=4; if(pdir=='down') py+=4; if(px>280) px=0; if(px<0) px=280; if(py>280) py=0; if(py<0) py=280; drawPixelPac(px,py); pGhosts.forEach(g=>{ if(g.x<px) g.x+=g.s; else g.x-=g.s; if(g.y<py) g.y+=g.s; else g.y-=g.s; drawPixelGhost(g.x, g.y, g.c); if(Math.hypot(g.x-px, g.y-py)<15){ pOn=false; document.getElementById('go-screen').style.display='flex'; } }); pDots.forEach(d=>{ if(d.a){ pctx.fillStyle="#fff"; pctx.fillRect(d.x-2, d.y-2, 4, 4); if(Math.hypot(d.x-px, d.y-py)<14){ d.a=false; score+=10; } } }); document.getElementById('pac-score').innerText=score; if(pDots.every(d=>!d.a)) createDots(); }
     </script>
 </body>
 </html>
