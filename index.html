@@ -195,7 +195,7 @@
         function clearC(){ saveStep(); ctx.fillStyle="#fff"; ctx.fillRect(0,0,canv.width,canv.height); }
 
         // المنتدى
-        let userN = ""; const bots = ["قناص_الرياض", "شوكولاتة", "الأسطورة_99"]; const msgs = ["ههههههههه نكتة حلوة", "أحد يلعب باك مان؟", "موقع فله"];
+        let userN = ""; const bots = ["النظام", "النظام", "النظام"]; const msgs = ["  اشهد ان لا إله إلا الله و ان محمد رسول الله", "استغفرالله", " صلي على النبي"];
         function setName(){ let n=document.getElementById('u-name').value; if(n){ userN=n; document.getElementById('name-setup').style.display='none'; document.getElementById('chat-ui').style.display='flex'; startOnline(); } }
         function postM(){ let m=document.getElementById('f-msg').value; if(m){ addMsg(userN, m); document.getElementById('f-msg').value=""; } }
         function addMsg(u, m){ let b=document.getElementById('forum-box'); b.innerHTML+=`<div><b>${u}:</b> ${m}</div>`; b.scrollTop=b.scrollHeight; }
