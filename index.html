@@ -19,6 +19,18 @@
         .content-area { flex-grow: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; overflow: hidden; padding-top: 10px; }
         .section { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: flex-start; }
         .active-section { display: flex; }
+        .choice-box { width: 85%; padding: 15px; margin: 5px; text-align: center; font-size: 16px; font-weight: bold; border: 3px double; cursor: pointer; }
+        .blue-choice { background: #000080; border-color: #00f; color: #fff; }
+        .red-choice { background: #800000; border-color: #f00; color: #fff; }
+        .joke-display { width: 85%; padding: 15px; border: 2px dashed #ffff00; color: #ffff00; font-size: 17px; text-align: center; min-height: 80px; display: flex; align-items: center; background: rgba(0,0,0,0.7); margin-top: 20px; }
+        #paint-wrap { width: 95%; height: 50%; background: #fff; border: 2px solid #00ff00; margin-bottom: 5px; cursor: crosshair; position: relative; }
+        canvas#canv { width: 100%; height: 100%; touch-action: none; background: #fff; }
+        #pacman-canvas { background: #000; border: 2px solid #00f; image-rendering: pixelated; }
+        .paint-tools { background: #c0c0c0; display: flex; flex-wrap: wrap; gap: 3px; padding: 5px; border-top: 1px solid #000; justify-content: center; width: 95%; }
+        .paint-tools button { color: #000; font-size: 9px; padding: 3px; background: #ddd; border: 1px outset #fff; cursor: pointer; }
+        .color-dot { width: 22px; height: 22px; border: 1px solid #000; cursor: pointer; }
+        .pac-controls { display: grid; grid-template-columns: repeat(3, 50px); gap: 10px; margin-top: 15px; }
+        .pac-btn { width: 50px; height: 50px; background: #333; color: #fff; border: 2px solid #00ff00; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; user-select: none; }
         .marquee-container { position: fixed; bottom: 0; width: 100%; background: #000080; color: #fff; white-space: nowrap; overflow: hidden; padding: 6px 0; border-top: 2px solid #00ff00; }
         .marquee-text { display: inline-block; padding-right: 100%; animation: marquee-anim 25s linear infinite; }
         @keyframes marquee-anim { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
@@ -31,27 +43,116 @@
         <div class="sidebar">
             <div class="sidebar-title">قائمة الأسطورة</div>
             <button onclick="show('home')">الرئيسية</button>
-            <button onclick="show('forum-sec')">المنتدى (لايف)</button>
+            <button onclick="show('q-sec')">لو خيروك</button>
+            <button onclick="show('joke-sec')">النكت</button>
+            <button onclick="show('pac-sec')">باك مان</button>
+            <button onclick="show('paint-sec')">الرسام</button>
+            <button onclick="show('forum-sec')">منتدى لايف</button>
             <div class="main-title">فرفش مع الأسطورة</div>
         </div>
 
         <div class="content-area">
-            <div id="home" class="section active-section"><h2>أهلاً بك يا سالم</h2><p>الموقع الآن يدعم الدردشة المباشرة</p></div>
+            <div id="home" class="section active-section"><h2>أهلاً سالم</h2><p>تم استرجاع كل المميزات والدردشة الآن أونلاين!</p></div>
             
+            <div id="q-sec" class="section">
+                <div id="q-blue" class="choice-box blue-choice" onclick="nextQ()"></div>
+                <div style="color:#fff">أو</div>
+                <div id="q-red" class="choice-box red-choice" onclick="nextQ()"></div>
+            </div>
+
+            <div id="joke-sec" class="section">
+                <div id="joke-box" class="joke-display">اضغط التالي لتضحك</div>
+                <button onclick="nextJ()" style="background:#0f0; padding:8px 25px; margin-top:10px; font-weight:bold;">التالي</button>
+            </div>
+
+            <div id="pac-sec" class="section">
+                <div style="color:yellow; font-weight:bold; font-size:14px; margin-bottom:5px;">النقاط: <span id="pac-score">0</span></div>
+                <canvas id="pacman-canvas" width="280" height="280"></canvas>
+                <div class="pac-controls">
+                    <div></div><div class="pac-btn" onclick="setPacDir('up')">↑</div><div></div>
+                    <div class="pac-btn" onclick="setPacDir('left')">←</div><div></div><div class="pac-btn" onclick="setPacDir('right')">→</div>
+                    <div></div><div class="pac-btn" onclick="setPacDir('down')">↓</div><div></div>
+                </div>
+            </div>
+
+            <div id="paint-sec" class="section">
+                <div id="paint-wrap"><canvas id="canv"></canvas></div>
+                <div class="paint-tools">
+                    <button onclick="setTool('pen')">قلم</button>
+                    <button onclick="setTool('eraser')">محاية</button>
+                    <button onclick="undo()">تراجع</button>
+                    <button onclick="clearC()">مسح</button>
+                    <input type="range" id="pw" min="1" max="20" value="3" style="width:40px">
+                    <div class="color-dot" style="background:#000" onclick="setCol('#000')"></div>
+                    <div class="color-dot" style="background:#f00" onclick="setCol('#f00')"></div>
+                    <div class="color-dot" style="background:#00f" onclick="setCol('#00f')"></div>
+                </div>
+            </div>
+
             <div id="forum-sec" class="section">
                 <iframe src="https://www5.cbox.ws/box/?boxid=961537&boxtag=R2z6Bk" width="100%" height="100%" allowtransparency="yes" allow="autoplay" frameborder="0" marginheight="0" marginwidth="0" scrolling="auto"></iframe>
             </div>
         </div>
     </div>
 
+    <div class="marquee-container">
+        <div class="marquee-text">** موقع فرفش الأسطورة - فرفش يا بعد حيي - مترشح ضمن افضل ١٠٠ موقع عربي ***</div>
+    </div>
+
     <script>
         function show(id) {
             var sections = document.getElementsByClassName('section');
-            for (var i = 0; i < sections.length; i++) {
-                sections[i].classList.remove('active-section');
-            }
+            for (var i = 0; i < sections.length; i++) { sections[i].classList.remove('active-section'); }
             document.getElementById(id).classList.add('active-section');
+            if (id === 'paint-sec') setTimeout(initCanv, 100);
+            if (id === 'pac-sec') initPacman(); else if(typeof pacInt !== 'undefined') clearInterval(pacInt);
         }
+
+        // كل الأسئلة بدون تسليك
+        const qs = [
+            {a:"تطير بس تمشي بطيء جداً", b:"تختفي بس صوتك عالي وفاضحك"},
+            {a:"تاكل صرصور مقلي ومقرمش", b:"تشرب بنزين بارد مع ثلج"},
+            {a:"تكون عبقري بس فقير وشحات", b:"تكون غبي جداً بس عندك مليارات"},
+            {a:"ترجع للماضي وتغير كل أغلاطك", b:"تروح للمستقبل وتشوف وش بيصير لك"},
+            {a:"تكلم الحيوانات وتفهم عليهم", b:"تتحدث كل لغات البشر بطلاقة"},
+            {a:"تمشي حافي على رمل حارق", b:"تلبس جزمة ضيقة تعورك طول اليوم"},
+            {a:"تعيش في القطب المتجمد لحالك", b:"تعيش في وسط الصحراء بعز الصيف"},
+            {a:"تنام 20 ساعة وتصحى تعبان", b:"تنام ساعتين بس وتكون نشيط"},
+            {a:"تسمع أفكار الناس اللي حولك", b:"تتحكم في الوقت وتوقفه متى ما تبي"},
+            {a:"تعيش بدون إنترنت للأبد", b:"تعيش بدون مكيف في الظهرية"}
+        ];
+
+        // كل النكت بدون تسليك
+        const js = [
+            "محشش سألوه ايش اصعب شي بالحياة؟ قال انك تحدد السكسوكة وانت تاكل علك!",
+            "غبي رمى جواله من البلكونة ولقاه مكسور.. قال غريبة مع اني حاطه وضع طيران!",
+            "مدرس سأل طالب: الثعلب يولد ولا يبيض؟ قال: الثعلب مكار توقع منه أي شي!",
+            "واحد سأل محشش: شو اسماء اخوانك؟ قال: كلهم محمد إلا خالد اسمه فيصل!",
+            "محشش شاف إشارة ممنوع الوقوف.. قام انبطح بالشارع!",
+            "بخيل احترق بيته، اتصل بالمطافي رنة وحدة وقفل عشان ما يصرف!"
+        ];
+
+        let qI=0, jI=0;
+        function nextQ(){ document.getElementById('q-blue').innerText=qs[qI].a; document.getElementById('q-red').innerText=qs[qI].b; qI=(qI+1)%qs.length; }
+        function nextJ(){ document.getElementById('joke-box').innerText=js[jI]; jI=(jI+1)%js.length; }
+        nextQ(); nextJ();
+
+        // الرسام
+        let canv=document.getElementById('canv'), ctx=canv.getContext('2d'), drawing=false, tool='pen', color='#000', history=[];
+        function saveStep(){ history.push(canv.toDataURL()); }
+        function undo(){ if(history.length > 0){ let img = new Image(); img.src = history.pop(); img.onload = () => { ctx.clearRect(0,0,canv.width,canv.height); ctx.drawImage(img, 0, 0); } } }
+        function initCanv(){ let box = canv.parentElement; canv.width=box.clientWidth; canv.height=box.clientHeight; ctx.fillStyle="#fff"; ctx.fillRect(0,0,canv.width,canv.height); ctx.lineCap='round'; }
+        function getPos(e){ let rect = canv.getBoundingClientRect(); return { x: (e.touches?e.touches[0].clientX:e.clientX)-rect.left, y: (e.touches?e.touches[0].clientY:e.clientY)-rect.top }; }
+        canv.onmousedown = canv.ontouchstart = (e) => { drawing=true; saveStep(); ctx.beginPath(); let p=getPos(e); ctx.moveTo(p.x, p.y); };
+        window.onmousemove = window.ontouchmove = (e) => { if(!drawing) return; let p=getPos(e); ctx.strokeStyle=(tool=='eraser'?'#fff':color); ctx.lineWidth=document.getElementById('pw').value; ctx.lineTo(p.x, p.y); ctx.stroke(); };
+        window.onmouseup = window.ontouchend = () => drawing=false;
+        function setTool(t){ tool=t; } function setCol(c){ color=c; tool='pen'; } function clearC(){ ctx.fillStyle="#fff"; ctx.fillRect(0,0,canv.width,canv.height); }
+
+        // باك مان
+        let pc=document.getElementById('pacman-canvas'), pctx=pc.getContext('2d'), pacInt, px, py, pdir;
+        function initPacman(){ px=140; py=140; pdir='stop'; if(pacInt) clearInterval(pacInt); pacInt=setInterval(upPac, 40); }
+        function setPacDir(d){ pdir=d; }
+        function upPac(){ pctx.fillStyle="#000"; pctx.fillRect(0,0,280,280); if(pdir=='right') px+=4; if(pdir=='left') px-=4; if(pdir=='up') py-=4; if(pdir=='down') py+=4; pctx.fillStyle="yellow"; pctx.beginPath(); pctx.arc(px, py, 12, 0.2*Math.PI, 1.8*Math.PI); pctx.lineTo(px,py); pctx.fill(); }
     </script>
 </body>
 </html>
