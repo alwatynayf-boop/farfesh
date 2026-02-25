@@ -23,12 +23,17 @@
         .section { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: flex-start; }
         .active-section { display: flex; }
 
-        /* أدوات الرسام */
+        /* لو خيروك */
+        .choice-box { width: 85%; padding: 15px; margin: 5px; text-align: center; font-size: 16px; font-weight: bold; border: 3px double; cursor: pointer; }
+        .blue-choice { background: #000080; border-color: #00f; color: #fff; }
+        .red-choice { background: #800000; border-color: #f00; color: #fff; }
+
+        /* الرسام */
         .paint-tools { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; background: #000; padding: 5px; width: 95%; border: 1px solid #00ff00; margin-bottom: 5px; }
         .tool-btn { padding: 4px 6px; cursor: pointer; border: 2px outset #00ff00; color: #00ff00; background: #000; font-size: 10px; font-weight: bold; }
-        .color-dot { width: 20px; height: 20px; border: 1px solid #fff; cursor: pointer; }
-        #paint-wrap { width: 95%; height: 50%; background: #fff; border: 2px solid #00ff00; cursor: crosshair; }
-        canvas#canv { width: 100%; height: 100%; touch-action: none; background: #fff; }
+        .color-dot { width: 18px; height: 18px; border: 1px solid #fff; cursor: pointer; }
+        #paint-wrap { width: 95%; height: 45%; background: #fff; border: 2px solid #00ff00; cursor: crosshair; }
+        canvas#canv { width: 100%; height: 100%; touch-action: none; }
 
         /* باك مان */
         #pacman-canvas { background: #000; border: 2px solid #00f; }
@@ -37,12 +42,11 @@
 
         /* تنبيه الموت */
         #custom-alert { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #000; border: 3px solid #f00; padding: 20px; z-index: 1000; text-align: center; }
-        #custom-alert button { background: #333; color: #fff; border: 2px solid #fff; padding: 10px 20px; cursor: pointer; font-weight: bold; font-family: 'Courier New'; }
+        #custom-alert button { background: #333; color: #fff; border: 2px solid #fff; padding: 10px 20px; cursor: pointer; font-weight: bold; }
 
         .marquee-container { position: fixed; bottom: 0; width: 100%; background: #000080; color: #fff; white-space: nowrap; overflow: hidden; padding: 6px 0; border-top: 2px solid #00ff00; }
         .marquee-text { display: inline-block; padding-right: 100%; animation: marquee-anim 25s linear infinite; }
         @keyframes marquee-anim { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-        
         #forum-sec iframe { width: 90%; height: 40%; border: 2px solid #00ff00; }
     </style>
 </head>
@@ -71,13 +75,13 @@
             </div>
             
             <div id="q-sec" class="section">
-                <div id="q-blue" class="choice-box" style="width:85%; padding:15px; margin:5px; text-align:center; background:#000080; border:3px double #00f; color:#fff; cursor:pointer;" onclick="nextQ()"></div>
+                <div id="q-blue" class="choice-box blue-choice" onclick="nextQ()"></div>
                 <div style="color:#fff">أو</div>
-                <div id="q-red" class="choice-box" style="width:85%; padding:15px; margin:5px; text-align:center; background:#800000; border:3px double #f00; color:#fff; cursor:pointer;" onclick="nextQ()"></div>
+                <div id="q-red" class="choice-box red-choice" onclick="nextQ()"></div>
             </div>
 
             <div id="joke-sec" class="section">
-                <div id="joke-box" style="width:85%; padding:15px; border:2px dashed #ffff00; color:#ffff00; text-align:center; min-height:80px; background:rgba(0,0,0,0.7); margin-top:20px;">اضغط التالي لتضحك</div>
+                <div id="joke-box" style="width: 85%; padding: 15px; border: 2px dashed #ffff00; color: #ffff00; font-size: 17px; text-align: center; min-height: 80px; display: flex; align-items: center; background: rgba(0,0,0,0.7); margin-top: 20px;">اضغط التالي لتضحك</div>
                 <button onclick="nextJ()" style="background:#0f0; padding:8px 25px; margin-top:10px; font-weight:bold; cursor:pointer;">التالي</button>
             </div>
 
@@ -94,15 +98,11 @@
                 <div class="paint-tools">
                     <button class="tool-btn" onclick="setTool('pen')">قلم</button>
                     <button class="tool-btn" onclick="setTool('eraser')">محاية</button>
-                    <button class="tool-btn" onclick="setTool('fill')">سطل</button>
                     <button class="tool-btn" onclick="undo()">تراجع</button>
                     <button class="tool-btn" onclick="saveImage()">حفظ PNG</button>
-                    <input type="range" min="1" max="20" value="5" id="brushSize" onchange="thickness=this.value">
-                    <div class="color-dot" style="background:blue" onclick="setColor('blue')"></div>
-                    <div class="color-dot" style="background:black" onclick="setColor('black')"></div>
                     <div class="color-dot" style="background:red" onclick="setColor('red')"></div>
                     <div class="color-dot" style="background:yellow" onclick="setColor('yellow')"></div>
-                    <div class="color-dot" style="background:green" onclick="setColor('green')"></div>
+                    <div class="color-dot" style="background:blue" onclick="setColor('blue')"></div>
                     <button class="tool-btn" onclick="clearCanvas()">مسح</button>
                 </div>
                 <div id="paint-wrap"><canvas id="canv"></canvas></div>
@@ -127,62 +127,79 @@
             if(id === 'paint-sec') setTimeout(initCanv, 100);
         }
 
-        const qs = [{a:"تاكل بصل ني كل صباح", b:"تشرب عصير ثوم كل ليلة"}, {a:"تعيش في بيت مسكون", b:"تنام في غابة كلها وحوش"}, {a:"تكون مشهور ومكروه", b:"تكون مجهول ومحبوب"}, {a:"تفقد ذاكرتك تماماً", b:"تفقد قدرتك على النوم"}, {a:"تعيش بدون جوال سنة", b:"تعيش بدون سيارة سنة"}, {a:"تكون خارق السرعة", b:"تكون خارق القوة"}, {a:"تسمع نكت سخيفة للأبد", b:"ما تضحك أبداً طول حياتك"}, {a:"تلبس شتوي في الصيف", b:"تلبس صيفي في الشتاء"}, {a:"تصحي الصبح تلاقي نفسك ملك", b:"تصحي تلاقي نفسك طفل"}, {a:"تاكل وجبتك المفضلة فقط", b:"تجرب أكلة جديدة كل يوم غصباً عنك"}];
+        // --- لو خيروك (10 أسئلة كاملة) ---
+        const qs = [
+            {a:"تاكل بصل ني كل صباح", b:"تشرب عصير ثوم كل ليلة"},
+            {a:"تعيش في بيت مسكون", b:"تنام في غابة كلها وحوش"},
+            {a:"تكون مشهور ومكروه", b:"تكون مجهول ومحبوب"},
+            {a:"تفقد ذاكرتك تماماً", b:"تفقد قدرتك على النوم"},
+            {a:"تعيش بدون جوال سنة", b:"تعيش بدون سيارة سنة"},
+            {a:"تكون خارق السرعة", b:"تكون خارق القوة"},
+            {a:"تسمع نكت سخيفة للأبد", b:"ما تضحك أبداً طول حياتك"},
+            {a:"تلبس شتوي في الصيف", b:"تلبس صيفي في الشتاء"},
+            {a:"تصحي الصبح تلاقي نفسك ملك", b:"تصحي تلاقي نفسك طفل"},
+            {a:"تاكل وجبتك المفضلة فقط", b:"تجرب أكلة جديدة كل يوم غصباً عنك"}
+        ];
         let qI=0; function nextQ(){ document.getElementById('q-blue').innerText=qs[qI].a; document.getElementById('q-red').innerText=qs[qI].b; qI=(qI+1)%qs.length; } nextQ();
 
-        const js = ["محشش سأل أخوه: ليش أنت أصلع؟ قال: من كثر التفكير. قال المحشش: وأنا ليش شعري كثيف؟ قال: من كثر ما تسأل!", "غبي في حصة علوم سأله المدرس: ايش فوائد الخشب؟ قال: الخشب منه نصنع الملاعق الخشبية عشان ما تجرح القدر!", "واحد بخيل بنى بيت وحط فيه بابين.. واحد للدخول وواحد عشان يطلع منه الضيوف بسرعة!", "محشش شاف لوحة 'ممنوع الوقوف' قام انسدح!", "غبي ضاع شاحنه، قال لمرته: خلاص ضاع الشاحن. قالت: دور زين. قال: لو كان إبرة كان لقيته!", "عجوز راحت للدكتور، قالها: عندك ضغط. قالت: والله ما عندي غير بنتين وهربوا مع أزواجهم!", "واحد سأل محشش: الساعة كم؟ قال: مدري بس الرقمين اللي فوق بعض طاحوا!", "محشش يقول لخويه: تصدق الدنيا هذي غريبة، الواحد يموت وما يدري متى يعزونه!", "واحد عصبي تزوج وحدة عصبية، جابوا ولد أول ما طلع قال للممرضة: وش تبين تناظرين؟!", "بخيل دخل الحمام وما طلع.. ليش؟ لأن مكتوب على الباب 'ادفع'!"];
+        // --- النكت (10 نكت كاملة) ---
+        const js = [
+            "محشش سأل أخوه: ليش أنت أصلع؟ قال: من كثر التفكير. قال المحشش: وأنا ليش شعري كثيف؟ قال: من كثر ما تسأل!",
+            "غبي في حصة علوم سأله المدرس: ايش فوائد الخشب؟ قال: الخشب منه نصنع الملاعق الخشبية عشان ما تجرح القدر!",
+            "واحد بخيل بنى بيت وحط فيه بابين.. واحد للدخول وواحد عشان يطلع منه الضيوف بسرعة!",
+            "محشش شاف لوحة 'ممنوع الوقوف' قام انسدح!",
+            "غبي ضاع شاحنه، قال لمرته: خلاص ضاع الشاحن. قالت: دور زين. قال: لو كان إبرة كان لقيته!",
+            "عجوز راحت للدكتور، قالها: عندك ضغط. قالت: والله ما عندي غير بنتين وهربوا مع أزواجهم!",
+            "واحد سأل محشش: الساعة كم؟ قال: مدري بس الرقمين اللي فوق بعض طاحوا!",
+            "محشش يقول لخويه: تصدق الدنيا هذي غريبة، الواحد يموت وما يدري متى يعزونه!",
+            "واحد عصبي تزوج وحدة عصبية، جابوا ولد أول ما طلع قال للممرضة: وش تبين تناظرين؟!",
+            "بخيل دخل الحمام وما طلع.. ليش؟ لأن مكتوب على الباب 'ادفع'!"
+        ];
         let jI=0; function nextJ(){ document.getElementById('joke-box').innerText=js[jI]; jI=(jI+1)%js.length; } nextJ();
 
-        // نظام الرسام المعدل (إصلاح كامل)
-        let canv=document.getElementById('canv'), ctx=canv.getContext('2d'), drawing=false, tool='pen', color='black', thickness=5, history=[];
-        function initCanv(){
-            let wrap = document.getElementById('paint-wrap');
-            if(canv.width !== wrap.clientWidth){
-                canv.width = wrap.clientWidth; canv.height = wrap.clientHeight;
-                ctx.fillStyle="#fff"; ctx.fillRect(0,0,canv.width,canv.height);
-                saveHistory();
-            }
-        }
-        function saveHistory(){ history.push(canv.toDataURL()); if(history.length>20)history.shift(); }
+        // --- الرسام (تراجع وحفظ) ---
+        let canv=document.getElementById('canv'), ctx=canv.getContext('2d'), drawing=false, history=[], tool='pen', color='black';
+        function initCanv(){ if(canv.width === 0){ canv.width=canv.parentElement.clientWidth; canv.height=canv.parentElement.clientHeight; ctx.fillStyle="#fff"; ctx.fillRect(0,0,canv.width,canv.height); saveHistory(); } }
+        function saveHistory(){ history.push(canv.toDataURL()); if(history.length>20) history.shift(); }
         function undo(){ if(history.length>1){ history.pop(); let img=new Image(); img.src=history[history.length-1]; img.onload=()=>ctx.drawImage(img,0,0); } }
         function saveImage(){ let l=document.createElement('a'); l.download='drawing.png'; l.href=canv.toDataURL(); l.click(); }
-        function getPos(e){
-            let r=canv.getBoundingClientRect();
-            let x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
-            let y = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
-            return {x:x, y:y};
-        }
-        function startDraw(e){ drawing=true; ctx.beginPath(); let p=getPos(e); ctx.moveTo(p.x, p.y); }
-        function moveDraw(e){ if(!drawing) return; let p=getPos(e); ctx.lineWidth=thickness; ctx.lineCap='round'; ctx.strokeStyle=(tool==='eraser')?'#fff':color; ctx.lineTo(p.x, p.y); ctx.stroke(); }
-        function stopDraw(){ if(drawing){ drawing=false; saveHistory(); } }
-        
-        canv.addEventListener('mousedown', startDraw); canv.addEventListener('mousemove', moveDraw); window.addEventListener('mouseup', stopDraw);
-        canv.addEventListener('touchstart', (e)=>{ e.preventDefault(); startDraw(e); }); canv.addEventListener('touchmove', (e)=>{ e.preventDefault(); moveDraw(e); }); canv.addEventListener('touchend', stopDraw);
-        
-        function setTool(t){ tool=t; if(t==='fill'){ ctx.fillStyle=color; ctx.fillRect(0,0,canv.width,canv.height); saveHistory(); } }
-        function setColor(c){ color=c; tool='pen'; } 
-        function clearCanvas(){ ctx.fillStyle="#fff"; ctx.fillRect(0,0,canv.width,canv.height); saveHistory(); }
+        function getPos(e){ let r=canv.getBoundingClientRect(); return {x:(e.touches?e.touches[0].clientX:e.clientX)-r.left, y:(e.touches?e.touches[0].clientY:e.clientY)-r.top}; }
+        canv.onmousedown=(e)=>{drawing=true; ctx.beginPath(); let p=getPos(e); ctx.moveTo(p.x,p.y);};
+        canv.onmousemove=(e)=>{if(!drawing)return; let p=getPos(e); ctx.strokeStyle=(tool==='eraser')?'#fff':color; ctx.lineTo(p.x,p.y); ctx.stroke();};
+        window.onmouseup=()=>{if(drawing){drawing=false; saveHistory();}};
+        canv.ontouchstart=(e)=>{e.preventDefault(); drawing=true; ctx.beginPath(); let p=getPos(e); ctx.moveTo(p.x,p.y);};
+        canv.ontouchmove=(e)=>{e.preventDefault(); if(!drawing)return; let p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke();};
+        function setTool(t){tool=t;} function setColor(c){color=c; tool='pen';} function clearCanvas(){ctx.fillStyle="#fff"; ctx.fillRect(0,0,canv.width,canv.height); saveHistory();}
 
-        // نظام باك مان (السرعة الهادئة)
+        // --- باك مان بذكاء الشبح المتطور ---
         let pC=document.getElementById('pacman-canvas'), pCtx=pC.getContext('2d'), grid=20;
         let pac={x:20,y:20,dx:0,dy:0}, ghost={x:220,y:220}, dots=[], score=0, pacInt=null;
         function startPacman(){ if(pacInt)return; dots=[]; for(let i=20;i<240;i+=grid)for(let j=20;j<240;j+=grid)dots.push({x:i,y:j,a:true}); pacInt=setInterval(updatePac, 300); }
         function stopPacman(){ clearInterval(pacInt); pacInt=null; }
         function setPacDir(x,y){ pac.dx=x*grid; pac.dy=y*grid; }
         function retryPacman(){ document.getElementById('custom-alert').style.display='none'; score=0; pac={x:20,y:20,dx:0,dy:0}; ghost={x:220,y:220}; startPacman(); }
-        function drawPac(x,y){ pCtx.fillStyle="yellow"; pCtx.beginPath(); pCtx.arc(x,y,8,0.2*Math.PI,1.8*Math.PI); pCtx.lineTo(x,y); pCtx.fill(); }
-        function drawGhost(x,y){
-            pCtx.fillStyle="red"; pCtx.beginPath(); pCtx.arc(x,y-2,8,Math.PI,0); pCtx.fillRect(x-8,y-2,16,8); pCtx.fill();
-            pCtx.fillStyle="white"; pCtx.beginPath(); pCtx.arc(x-3,y-3,2,0,7); pCtx.arc(x+3,y-3,2,0,7); pCtx.fill();
-            pCtx.fillStyle="blue"; pCtx.beginPath(); pCtx.arc(x-3,y-3,1,0,7); pCtx.arc(x+3,y-3,1,0,7); pCtx.fill();
-        }
+
         function updatePac(){
             pac.x+=pac.dx; pac.y+=pac.dy;
             if(pac.x<20)pac.x=220; if(pac.x>220)pac.x=20; if(pac.y<20)pac.y=220; if(pac.y>220)pac.y=20;
-            if(Math.abs(pac.x-ghost.x)>Math.abs(pac.y-ghost.y)) ghost.x+=(pac.x>ghost.x?grid:-grid); else ghost.y+=(pac.y>ghost.y?grid:-grid);
+
+            // ذكاء الشبح: يحلل المسافة الأقصر في الشبكة
+            let moves = [{x:grid,y:0},{x:-grid,y:0},{x:0,y:grid},{x:0,y:-grid}];
+            moves.sort((a,b) => {
+                let dA = Math.abs((ghost.x+a.x)-pac.x) + Math.abs((ghost.y+a.y)-pac.y);
+                let dB = Math.abs((ghost.x+b.x)-pac.x) + Math.abs((ghost.y+b.y)-pac.y);
+                return dA - dB;
+            });
+            ghost.x += moves[0].x; ghost.y += moves[0].y;
+            if(ghost.x<20)ghost.x=220; if(ghost.x>220)ghost.x=20; if(ghost.y<20)ghost.y=220; if(ghost.y>220)ghost.y=20;
+
             pCtx.fillStyle="black"; pCtx.fillRect(0,0,240,240);
             pCtx.fillStyle="pink"; dots.forEach(d=>{if(d.a){pCtx.beginPath(); pCtx.arc(d.x,d.y,2,0,7); pCtx.fill(); if(pac.x===d.x&&pac.y===d.y){d.a=false; score+=10; document.getElementById('score').innerText=score;}}});
-            drawPac(pac.x,pac.y); drawGhost(ghost.x,ghost.y);
+            
+            pCtx.fillStyle="yellow"; pCtx.beginPath(); pCtx.arc(pac.x,pac.y,8,0.2*Math.PI,1.8*Math.PI); pCtx.lineTo(pac.x,pac.y); pCtx.fill();
+            pCtx.fillStyle="red"; pCtx.beginPath(); pCtx.arc(ghost.x,ghost.y-2,8,Math.PI,0); pCtx.fillRect(ghost.x-8,ghost.y-2,16,8); pCtx.fill();
+            pCtx.fillStyle="white"; pCtx.beginPath(); pCtx.arc(ghost.x-3,ghost.y-3,2,0,7); pCtx.arc(ghost.x+3,ghost.y-3,2,0,7); pCtx.fill();
+
             if(pac.x===ghost.x&&pac.y===ghost.y){ stopPacman(); document.getElementById('custom-alert').style.display='block'; }
         }
     </script>
