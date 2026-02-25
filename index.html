@@ -47,25 +47,33 @@
         .red-choice { background: #800000; border-color: #f00; color: #fff; }
         .joke-display { width: 85%; padding: 15px; border: 2px dashed #ffff00; color: #ffff00; font-size: 17px; text-align: center; min-height: 80px; display: flex; align-items: center; background: rgba(0,0,0,0.7); margin-top: 20px; }
         
-        /* تعديلات الرسام */
-        #paint-wrap { width: 95%; height: 50%; background: #fff; border: 2px solid #00ff00; margin-bottom: 5px; cursor: crosshair; position: relative; overflow: hidden; }
-        canvas#canv { width: 100%; height: 100%; touch-action: none; background: #fff; }
-        .paint-tools { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; background: #222; padding: 5px; width: 95%; border: 1px solid #00ff00; }
-        .tool-btn { padding: 5px; cursor: pointer; border: 1px solid #fff; color: white; background: #444; font-size: 10px; }
-        .color-dot { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 1px solid #fff; }
+        /* أدوات الرسام */
+        .paint-tools { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; background: #000; padding: 5px; width: 95%; border: 1px solid #00ff00; margin-bottom: 5px; }
+        .tool-btn { padding: 4px 8px; cursor: pointer; border: 2px outset #00ff00; color: #00ff00; background: #000; font-size: 11px; font-weight: bold; }
+        .color-dot { width: 22px; height: 22px; border: 1px solid #fff; cursor: pointer; }
+        #paint-wrap { width: 95%; height: 45%; background: #fff; border: 2px solid #00ff00; cursor: crosshair; }
+        canvas#canv { width: 100%; height: 100%; touch-action: none; }
 
-        /* تعديلات باك مان */
+        /* باك مان */
         #pacman-canvas { background: #000; border: 2px solid #00f; }
         .pac-controls { display: grid; grid-template-columns: repeat(3, 50px); gap: 10px; margin-top: 10px; }
-        .pac-btn { width: 50px; height: 50px; background: #333; color: #fff; border: 2px solid #00ff00; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; border-radius: 10px; }
-        
-        /* تعديل المنتدى */
-        #forum-sec iframe { width: 90%; height: 60%; border: 2px solid #00ff00; }
+        .pac-btn { width: 50px; height: 50px; background: #000; color: #00ff00; border: 2px outset #00ff00; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
+
+        /* تنبيه مخصص */
+        #custom-alert { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #000; border: 3px solid #f00; padding: 20px; z-index: 1000; text-align: center; color: #fff; box-shadow: 0 0 20px #f00; }
+        #custom-alert button { margin-top: 15px; background: #f00; color: #fff; border: none; padding: 5px 20px; cursor: pointer; font-weight: bold; }
+
+        /* المنتدى */
+        #forum-sec iframe { width: 90%; height: 50%; border: 2px solid #00ff00; }
     </style>
 </head>
 <body>
     <div class="stars"></div>
-    <div class="header-area"></div>
+    <div id="custom-alert">
+        <div id="alert-msg"></div>
+        <button onclick="document.getElementById('custom-alert').style.display='none'">حسناً</button>
+    </div>
+
     <div class="container">
         <div class="sidebar">
             <div class="sidebar-title">قائمة الأسطورة</div>
@@ -106,22 +114,21 @@
 
             <div id="paint-sec" class="section">
                 <div class="paint-tools">
-                    <button class="tool-btn" onclick="setTool('pen')">قلم ✏️</button>
-                    <button class="tool-btn" onclick="setTool('eraser')">محاية 🧽</button>
-                    <button class="tool-btn" onclick="setTool('fill')">سطل 🪣</button>
+                    <button class="tool-btn" onclick="setTool('pen')">قلم</button>
+                    <button class="tool-btn" onclick="setTool('eraser')">محاية</button>
+                    <button class="tool-btn" onclick="setTool('fill')">سطل</button>
                     <input type="range" min="1" max="20" value="5" id="brushSize" onchange="thickness = this.value">
                     <div class="color-dot" style="background:blue" onclick="setColor('blue')"></div>
                     <div class="color-dot" style="background:black" onclick="setColor('black')"></div>
                     <div class="color-dot" style="background:red" onclick="setColor('red')"></div>
                     <div class="color-dot" style="background:yellow" onclick="setColor('yellow')"></div>
                     <div class="color-dot" style="background:green" onclick="setColor('green')"></div>
-                    <button class="tool-btn" onclick="clearCanvas()">مسح الكل</button>
+                    <button class="tool-btn" onclick="clearCanvas()">مسح</button>
                 </div>
                 <div id="paint-wrap"><canvas id="canv"></canvas></div>
             </div>
 
             <div id="forum-sec" class="section">
-                <p>دردشة المنتدى</p>
                 <iframe src="https://www5.cbox.ws/box/?boxid=961537&boxtag=R2z6Bk" frameborder="0" allowtransparency="yes"></iframe>
             </div>
         </div>
@@ -134,133 +141,88 @@
     </div>
 
     <script>
+        function myAlert(msg) {
+            document.getElementById('alert-msg').innerText = msg;
+            document.getElementById('custom-alert').style.display = 'block';
+        }
+
         function show(id) {
             var sections = document.getElementsByClassName('section');
             for (var i = 0; i < sections.length; i++) { sections[i].classList.remove('active-section'); }
             document.getElementById(id).classList.add('active-section');
+            
+            // إيقاف اللعبة إذا خرج من صفحتها
+            if(id !== 'pac-sec') { stopPacman(); } else { startPacman(); }
             if(id === 'paint-sec') setTimeout(initCanv, 100);
-            if(id === 'pac-sec') startPacman();
         }
 
-        // --- قسم لو خيروك ---
         const qs = [
             {a:"تاكل بصل ني كل صباح", b:"تشرب عصير ثوم كل ليلة"},
+            {a:"تعيش في بيت مسكون", b:"تنام في غابة كلها وحوش"},
             {a:"تكون مشهور ومكروه", b:"تكون مجهول ومحبوب"},
-            {a:"تلبس شتوي في الصيف", b:"تلبس صيفي في الشتاء"}
+            {a:"تفقد ذاكرتك تماماً", b:"تفقد قدرتك على النوم"},
+            {a:"تعيش بدون جوال سنة", b:"تعيش بدون سيارة سنة"},
+            {a:"تكون خارق السرعة", b:"تكون خارق القوة"},
+            {a:"تسمع نكت سخيفة للأبد", b:"ما تضحك أبداً طول حياتك"},
+            {a:"تلبس شتوي في الصيف", b:"تلبس صيفي في الشتاء"},
+            {a:"تصحي الصبح تلاقي نفسك ملك", b:"تصحي تلاقي نفسك طفل"},
+            {a:"تاكل وجبتك المفضلة فقط", b:"تجرب أكلة جديدة كل يوم غصباً عنك"}
         ];
         let qI=0;
         function nextQ(){ document.getElementById('q-blue').innerText=qs[qI].a; document.getElementById('q-red').innerText=qs[qI].b; qI=(qI+1)%qs.length; }
         nextQ();
 
-        // --- قسم النكت ---
-        const js = ["محشش سأل أخوه: ليش أنت أصلع؟ قال: من كثر التفكير. قال المحشش: وأنا ليش شعري كثيف؟ قال: من كثر ما تسأل!", "بخيل دخل الحمام وما طلع.. ليش؟ لأن مكتوب على الباب 'ادفع'!"];
+        const js = [
+            "محشش سأل أخوه: ليش أنت أصلع؟ قال: من كثر التفكير. قال المحشش: وأنا ليش شعري كثيف؟ قال: من كثر ما تسأل!",
+            "غبي في حصة علوم سأله المدرس: ايش فوائد الخشب؟ قال: الخشب منه نصنع الملاعق الخشبية عشان ما تجرح القدر!",
+            "واحد بخيل بنى بيت وحط فيه بابين.. واحد للدخول وواحد عشان يطلع منه الضيوف بسرعة!",
+            "محشش شاف لوحة 'ممنوع الوقوف' قام انسدح!",
+            "غبي ضاع شاحنه، قال لمرته: خلاص ضاع الشاحن. قالت: دور زين. قال: لو كان إبرة كان لقيته!",
+            "عجوز راحت للدكتور، قالها: عندك ضغط. قالت: والله ما عندي غير بنتين وهربوا مع أزواجهم!",
+            "واحد سأل محشش: الساعة كم؟ قال: مدري بس الرقمين اللي فوق بعض طاحوا!",
+            "محشش يقول لخويه: تصدق الدنيا هذي غريبة، الواحد يموت وما يدري متى يعزونه!",
+            "واحد عصبي تزوج وحدة عصبية، جابوا ولد أول ما طلع قال للممرضة: وش تبين تناظرين؟!",
+            "بخيل دخل الحمام وما طلع.. ليش؟ لأن مكتوب على الباب 'ادفع'!"
+        ];
         let jI=0;
         function nextJ(){ document.getElementById('joke-box').innerText=js[jI]; jI=(jI+1)%js.length; }
         nextJ();
 
-        // --- الرسام المتطور (ماوس + لمس) ---
+        // الرسام
         let canv=document.getElementById('canv'), ctx=canv.getContext('2d');
         let drawing = false, tool = 'pen', color = 'black', thickness = 5;
-
-        function initCanv(){ 
-            if(canv.width !== canv.parentElement.clientWidth){
-                canv.width=canv.parentElement.clientWidth; 
-                canv.height=canv.parentElement.clientHeight; 
-                ctx.fillStyle="#fff"; ctx.fillRect(0,0,canv.width,canv.height); 
-            }
+        function initCanv(){ canv.width=canv.parentElement.clientWidth; canv.height=canv.parentElement.clientHeight; ctx.fillStyle="#fff"; ctx.fillRect(0,0,canv.width,canv.height); }
+        function getPos(e) { 
+            let rect = canv.getBoundingClientRect(); 
+            let cx = e.touches ? e.touches[0].clientX : e.clientX;
+            let cy = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: cx - rect.left, y: cy - rect.top }; 
         }
-        
-        function getPos(e) {
-            let rect = canv.getBoundingClientRect();
-            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return { x: clientX - rect.left, y: clientY - rect.top };
-        }
+        function startDraw(e) { if(tool==='fill'){ctx.fillStyle=color; ctx.fillRect(0,0,canv.width,canv.height); return;} drawing=true; ctx.beginPath(); let p=getPos(e); ctx.moveTo(p.x,p.y); }
+        function doDraw(e) { if(!drawing)return; let p=getPos(e); ctx.lineWidth=thickness; ctx.lineCap='round'; ctx.strokeStyle=(tool==='eraser')?'#fff':color; ctx.lineTo(p.x,p.y); ctx.stroke(); }
+        function setTool(t){tool=t;} function setColor(c){color=c; tool='pen';} function clearCanvas(){ctx.fillStyle="#fff"; ctx.fillRect(0,0,canv.width,canv.height);}
+        canv.addEventListener('mousedown', startDraw); canv.addEventListener('mousemove', doDraw); window.addEventListener('mouseup', ()=>drawing=false);
+        canv.addEventListener('touchstart', (e)=>{e.preventDefault(); startDraw(e);}); canv.addEventListener('touchmove', (e)=>{e.preventDefault(); doDraw(e);});
 
-        function startDraw(e) {
-            if(tool === 'fill') { fillArea(getPos(e)); return; }
-            drawing = true;
-            ctx.beginPath();
-            let pos = getPos(e);
-            ctx.moveTo(pos.x, pos.y);
-        }
-
-        function doDraw(e) {
-            if(!drawing) return;
-            let pos = getPos(e);
-            ctx.lineWidth = thickness;
-            ctx.lineCap = 'round';
-            ctx.strokeStyle = (tool === 'eraser') ? '#fff' : color;
-            ctx.lineTo(pos.x, pos.y);
-            ctx.stroke();
-        }
-
-        function setTool(t) { tool = t; }
-        function setColor(c) { color = c; tool = 'pen'; }
-        function clearCanvas() { ctx.fillStyle="#fff"; ctx.fillRect(0,0,canv.width,canv.height); }
-
-        function fillArea(pos) {
-            ctx.fillStyle = color;
-            ctx.fillRect(0, 0, canv.width, canv.height); // سطل بسيط للمساحة كاملة
-        }
-
-        canv.addEventListener('mousedown', startDraw);
-        canv.addEventListener('mousemove', doDraw);
-        window.addEventListener('mouseup', () => drawing = false);
-        canv.addEventListener('touchstart', (e) => { e.preventDefault(); startDraw(e); });
-        canv.addEventListener('touchmove', (e) => { e.preventDefault(); doDraw(e); });
-
-        // --- لعبة باكمان (محسنة رسومياً) ---
+        // باك مان
         let pCanvas = document.getElementById('pacman-canvas'), pCtx = pCanvas.getContext('2d');
-        let pac = { x: 20, y: 20, dx: 0, dy: 0, r: 12, angle: 0 };
-        let ghost = { x: 200, y: 200, r: 12 };
-        let dots = [], score = 0;
-
-        function startPacman() {
-            dots = [];
-            for(let i=40; i<240; i+=40) for(let j=40; j<240; j+=40) dots.push({x:i, y:j, active:true});
-            if(!window.pacInt) window.pacInt = setInterval(updatePac, 100);
+        let pac = { x: 20, y: 20, dx: 0, dy: 0, r: 12, angle: 0 }, ghost = { x: 200, y: 200 }, dots = [], score = 0, pacInt = null;
+        function startPacman() { 
+            if(pacInt) return; 
+            dots = []; for(let i=40; i<240; i+=40) for(let j=40; j<240; j+=40) dots.push({x:i, y:j, active:true});
+            pacInt = setInterval(updatePac, 100); 
         }
-
+        function stopPacman() { clearInterval(pacInt); pacInt = null; pac.dx=0; pac.dy=0; }
         function setPacDir(x, y) { pac.dx = x*5; pac.dy = y*5; pac.angle = x === 1 ? 0 : x === -1 ? Math.PI : y === 1 ? Math.PI/2 : 1.5*Math.PI; }
-
         function updatePac() {
             pac.x += pac.dx; pac.y += pac.dy;
-            if(pac.x < 0) pac.x = 250; if(pac.x > 250) pac.x = 0;
-            if(pac.y < 0) pac.y = 250; if(pac.y > 250) pac.y = 0;
-
-            // تحريك الشبح بشكل عشوائي بسيط
-            ghost.x += (pac.x > ghost.x ? 2 : -2);
-            ghost.y += (pac.y > ghost.y ? 2 : -2);
-
+            if(pac.x<0) pac.x=250; if(pac.x>250) pac.x=0; if(pac.y<0) pac.y=250; if(pac.y>250) pac.y=0;
+            ghost.x += (pac.x > ghost.x ? 2 : -2); ghost.y += (pac.y > ghost.y ? 2 : -2);
             pCtx.fillStyle = "black"; pCtx.fillRect(0,0,250,250);
-            
-            // رسم النقاط
-            pCtx.fillStyle = "white";
-            dots.forEach(d => {
-                if(d.active) {
-                    pCtx.beginPath(); pCtx.arc(d.x, d.y, 3, 0, 7); pCtx.fill();
-                    if(Math.hypot(pac.x-d.x, pac.y-d.y) < 15) { d.active = false; score += 10; document.getElementById('score').innerText = score; }
-                }
-            });
-
-            // رسم باكمان (شكل حقيقي)
-            pCtx.fillStyle = "yellow";
-            pCtx.beginPath();
-            pCtx.moveTo(pac.x, pac.y);
-            pCtx.arc(pac.x, pac.y, pac.r, pac.angle + 0.2, pac.angle + 1.8 * Math.PI);
-            pCtx.lineTo(pac.x, pac.y);
-            pCtx.fill();
-
-            // رسم الشبح
-            pCtx.fillStyle = "red";
-            pCtx.beginPath();
-            pCtx.arc(ghost.x, ghost.y, ghost.r, Math.PI, 0);
-            pCtx.lineTo(ghost.x + ghost.r, ghost.y + ghost.r);
-            pCtx.lineTo(ghost.x - ghost.r, ghost.y + ghost.r);
-            pCtx.fill();
-            
-            if(Math.hypot(pac.x-ghost.x, pac.y-ghost.y) < 20) { score = 0; pac.x=20; pac.y=20; alert("أكلك الشبح!"); }
+            pCtx.fillStyle = "white"; dots.forEach(d => { if(d.active) { pCtx.beginPath(); pCtx.arc(d.x, d.y, 3, 0, 7); pCtx.fill(); if(Math.hypot(pac.x-d.x, pac.y-d.y)<15){d.active=false; score+=10; document.getElementById('score').innerText=score;} } });
+            pCtx.fillStyle = "yellow"; pCtx.beginPath(); pCtx.moveTo(pac.x, pac.y); pCtx.arc(pac.x, pac.y, pac.r, pac.angle+0.2, pac.angle+1.8*Math.PI); pCtx.lineTo(pac.x, pac.y); pCtx.fill();
+            pCtx.fillStyle = "red"; pCtx.beginPath(); pCtx.arc(ghost.x, ghost.y, 12, Math.PI, 0); pCtx.lineTo(ghost.x+12, ghost.y+12); pCtx.lineTo(ghost.x-12, ghost.y+12); pCtx.fill();
+            if(Math.hypot(pac.x-ghost.x, pac.y-ghost.y)<20) { score=0; pac.x=20; pac.y=20; stopPacman(); myAlert("أكلك الشبح!"); }
         }
     </script>
 </body>
