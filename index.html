@@ -22,11 +22,12 @@
         .active-section { display: flex; }
 
         /* الرسام المطور */
-        .paint-tools { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; background: #000; padding: 5px; width: 95%; border: 1px solid #00ff00; margin-bottom: 5px; }
+        .paint-tools { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; background: #000; padding: 8px; width: 95%; border: 1px solid #00ff00; margin-bottom: 5px; align-items: center; }
         .tool-btn { padding: 4px 6px; cursor: pointer; border: 2px outset #00ff00; color: #00ff00; background: #000; font-size: 10px; font-weight: bold; }
         .color-dot { width: 22px; height: 22px; border: 1px solid #fff; cursor: pointer; border-radius: 50%; }
-        #paint-wrap { width: 95%; height: 50%; background: #fff; border: 2px solid #00ff00; cursor: crosshair; touch-action: none; }
+        #paint-wrap { width: 95%; height: 50%; background: #fff; border: 2px solid #00ff00; cursor: crosshair; touch-action: none; position: relative; }
         canvas#canv { width: 100%; height: 100%; display: block; }
+        .size-label { font-size: 10px; color: #fff; }
 
         /* باك مان */
         #pacman-canvas { background: #000; border: 2px solid #00f; }
@@ -85,13 +86,14 @@
                     <button class="tool-btn" onclick="setTool('eraser')">محاية</button>
                     <button class="tool-btn" onclick="setTool('fill')">سطل</button>
                     <button class="tool-btn" onclick="undo()">تراجع</button>
-                    <button class="tool-btn" onclick="saveImage()">حفظ PNG</button>
+                    <span class="size-label">الحجم:</span>
+                    <input type="range" id="size-slider" min="1" max="50" value="5" style="width:60px">
                     <div class="color-dot" style="background:red" onclick="setColor('red')"></div>
                     <div class="color-dot" style="background:yellow" onclick="setColor('yellow')"></div>
                     <div class="color-dot" style="background:blue" onclick="setColor('blue')"></div>
                     <div class="color-dot" style="background:green" onclick="setColor('green')"></div>
                     <div class="color-dot" style="background:black" onclick="setColor('black')"></div>
-                    <button class="tool-btn" onclick="clearCanvas()">مسح الكل</button>
+                    <button class="tool-btn" onclick="clearCanvas()">مسح</button>
                 </div>
                 <div id="paint-wrap"><canvas id="canv"></canvas></div>
             </div>
@@ -136,8 +138,10 @@
         ];
         let jI=0; function nextJ(){ document.getElementById('joke-box').innerText=js[jI]; jI=(jI+1)%js.length; } nextJ();
 
-        // --- الرسام (إصلاح اللمس والماوس) ---
+        // --- الرسام (إصلاح كامل) ---
         let canv=document.getElementById('canv'), ctx=canv.getContext('2d'), drawing=false, history=[], tool='pen', color='black';
+        let sizeSlider = document.getElementById('size-slider');
+
         function initCanv(){
             let wrap = document.getElementById('paint-wrap');
             if(canv.width !== wrap.clientWidth){
@@ -148,7 +152,6 @@
         }
         function saveHistory(){ history.push(canv.toDataURL()); if(history.length>20) history.shift(); }
         function undo(){ if(history.length>1){ history.pop(); let img=new Image(); img.src=history[history.length-1]; img.onload=()=>ctx.drawImage(img,0,0); } }
-        function saveImage(){ let l=document.createElement('a'); l.download='drawing.png'; l.href=canv.toDataURL(); l.click(); }
         function getPos(e){
             let r=canv.getBoundingClientRect();
             let x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
@@ -156,7 +159,15 @@
             return {x:x, y:y};
         }
         function start(e){ drawing=true; ctx.beginPath(); let p=getPos(e); ctx.moveTo(p.x, p.y); }
-        function move(e){ if(!drawing) return; let p=getPos(e); ctx.strokeStyle=(tool==='eraser')?'#fff':color; ctx.lineWidth=(tool==='eraser')?20:5; ctx.lineCap='round'; ctx.lineTo(p.x, p.y); ctx.stroke(); }
+        function move(e){ 
+            if(!drawing) return; 
+            let p=getPos(e); 
+            ctx.strokeStyle = (tool==='eraser') ? '#fff' : color; 
+            ctx.lineWidth = sizeSlider.value; 
+            ctx.lineCap = 'round'; 
+            ctx.lineTo(p.x, p.y); 
+            ctx.stroke(); 
+        }
         function stop(){ if(drawing){ drawing=false; saveHistory(); } }
         
         canv.addEventListener('mousedown', start); canv.addEventListener('mousemove', move); window.addEventListener('mouseup', stop);
@@ -165,19 +176,39 @@
         function setTool(t){ tool=t; if(t==='fill'){ ctx.fillStyle=color; ctx.fillRect(0,0,canv.width,canv.height); saveHistory(); } }
         function setColor(c){ color=c; tool='pen'; } function clearCanvas(){ ctx.fillStyle="#fff"; ctx.fillRect(0,0,canv.width,canv.height); saveHistory(); }
 
-        // --- باك مان بذكاء الشبح ---
+        // --- باك مان (ذكاء مطور) ---
         let pC=document.getElementById('pacman-canvas'), pCtx=pC.getContext('2d'), grid=20;
         let pac={x:20,y:20,dx:0,dy:0}, ghost={x:220,y:220}, dots=[], score=0, pacInt=null;
+        let lastGhostMove = {x:0, y:0};
+
         function startPacman(){ if(pacInt)return; dots=[]; for(let i=20;i<240;i+=grid)for(let j=20;j<240;j+=grid)dots.push({x:i,y:j,a:true}); pacInt=setInterval(updatePac, 300); }
         function stopPacman(){ clearInterval(pacInt); pacInt=null; }
         function setPacDir(x,y){ pac.dx=x*grid; pac.dy=y*grid; }
         function retryPacman(){ document.getElementById('custom-alert').style.display='none'; score=0; pac={x:20,y:20,dx:0,dy:0}; ghost={x:220,y:220}; startPacman(); }
+
         function updatePac(){
             pac.x+=pac.dx; pac.y+=pac.dy;
             if(pac.x<20)pac.x=220; if(pac.x>220)pac.x=20; if(pac.y<20)pac.y=220; if(pac.y>220)pac.y=20;
+
+            // ذكاء الشبح المطور: يمنع الشبح من الدوران حول نفسه ويجبره على المطاردة
             let ms = [{x:grid,y:0},{x:-grid,y:0},{x:0,y:grid},{x:0,y:-grid}];
-            ms.sort((a,b) => (Math.abs((ghost.x+a.x)-pac.x)+Math.abs((ghost.y+a.y)-pac.y)) - (Math.abs((ghost.x+b.x)-pac.x)+Math.abs((ghost.y+b.y)-pac.y)));
-            ghost.x += ms[0].x; ghost.y += ms[0].y;
+            
+            // فلترة الحركات عشان ما يرجع للخلف مباشرة إلا إذا علق
+            let filteredMs = ms.filter(m => !(m.x === -lastGhostMove.x && m.y === -lastGhostMove.y));
+            if(filteredMs.length === 0) filteredMs = ms;
+
+            filteredMs.sort((a,b) => {
+                let dA = Math.abs((ghost.x+a.x)-pac.x) + Math.abs((ghost.y+a.y)-pac.y);
+                let dB = Math.abs((ghost.x+b.x)-pac.x) + Math.abs((ghost.y+b.y)-pac.y);
+                return dA - dB;
+            });
+
+            let bestMove = filteredMs[0];
+            ghost.x += bestMove.x; ghost.y += bestMove.y;
+            lastGhostMove = bestMove;
+
+            if(ghost.x<20)ghost.x=220; if(ghost.x>220)ghost.x=20; if(ghost.y<20)ghost.y=220; if(ghost.y>220)ghost.y=20;
+
             pCtx.fillStyle="black"; pCtx.fillRect(0,0,240,240);
             pCtx.fillStyle="pink"; dots.forEach(d=>{if(d.a){pCtx.beginPath(); pCtx.arc(d.x,d.y,2,0,7); pCtx.fill(); if(pac.x===d.x&&pac.y===d.y){d.a=false; score+=10; document.getElementById('score').innerText=score;}}});
             pCtx.fillStyle="yellow"; pCtx.beginPath(); pCtx.arc(pac.x,pac.y,8,0.2*Math.PI,1.8*Math.PI); pCtx.lineTo(pac.x,pac.y); pCtx.fill();
